@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Générer Template Excel CRA</title>
+</head>
+<body>
+<p>Génération en cours...</p>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<script>
+(function() {
+  const data = [
+    ["Date", "Type", "Action", "Description"],
+    ["2026-02-02", "Réunion",        "Comité projet X",      "Point d'avancement sprint 12"],
+    ["2026-02-02", "Développement",  "Feature Auth",          "Implémentation OAuth2"],
+    ["2026-02-03", "Développement",  "API REST",              "Endpoints CRUD utilisateurs"],
+    ["2026-02-04", "Réunion",        "Daily standup",         ""],
+    ["2026-02-04", "Support",        "Ticket #1234",          "Bug connexion client VIP"],
+    ["2026-02-05", "Formation",      "Workshop Docker",       "Formation conteneurisation"],
+    ["2026-02-06", "Administration", "Reporting",             ""],
+    ["2026-02-09", "Réunion",        "Sprint planning",       "Planification sprint 13"],
+    ["2026-02-10", "Développement",  "Tests unitaires",       "Couverture module auth"],
+    ["2026-02-11", "Support",        "Incident prod",         "Résolution timeout DB"],
+    ["2026-02-12", "Développement",  "Refactoring",           "Optimisation requêtes SQL"],
+    ["2026-02-13", "Formation",      "Veille techno",         "Étude Kubernetes"],
+    ["2026-02-16", "Réunion",        "Comité architecture",   "Migration microservices"],
+    ["2026-02-17", "Développement",  "CI/CD Pipeline",        "Configuration GitHub Actions"],
+    ["2026-02-18", "Support",        "Ticket #1267",          "Performance page recherche"],
+    ["2026-02-19", "Administration", "Entretien annuel",      ""],
+    ["2026-02-20", "Réunion",        "Demo sprint 13",        "Présentation livrables"],
+    ["2026-02-23", "Développement",  "Feature Export",        "Export PDF rapports"],
+    ["2026-02-24", "Développement",  "Bug fixes",             "Correction régression UI"],
+    ["2026-02-25", "Formation",      "Conférence DevFest",    "Participation DevFest 2026"],
+    ["2026-02-26", "Support",        "Ticket #1289",          "Migration données client"],
+    ["2026-02-27", "Réunion",        "Sprint review",         "Démonstration sprint 13"],
+    // Lignes vides pour saisie
+    ["", "", "", ""],
+    ["", "", "", ""],
+    ["", "", "", ""],
+    ["", "", "", ""],
+    ["", "", "", ""],
+    ["", "", "", ""],
+    ["", "", "", ""],
+    ["", "", "", ""],
+    ["", "", "", ""],
+    ["", "", "", ""],
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+
+  // Column widths
+  ws['!cols'] = [
+    { wch: 14 },  // Date
+    { wch: 18 },  // Type
+    { wch: 32 },  // Action
+    { wch: 55 },  // Description
+  ];
+
+  // Data validation on Type column (B2:B100)
+  ws['!dataValidation'] = [{
+    sqref: 'B2:B100',
+    type: 'list',
+    formula1: '"Réunion,Développement,Support,Formation,Administration,Autre"',
+    showErrorMessage: true,
+    errorTitle: 'Type invalide',
+    error: 'Choisissez parmi : Réunion, Développement, Support, Formation, Administration, Autre',
+    showInputMessage: true,
+    promptTitle: 'Type',
+    prompt: 'Sélectionnez le type d\'action'
+  }];
+
+  // Auto-filter
+  ws['!autofilter'] = { ref: 'A1:D33' };
+
+  XLSX.utils.book_append_sheet(wb, ws, 'CRA');
+  XLSX.writeFile(wb, 'CRA_Template.xlsx');
+
+  document.body.innerHTML = '<p style="font-family:sans-serif;padding:2rem">✅ Fichier <b>CRA_Template.xlsx</b> téléchargé ! Vous pouvez fermer cet onglet.</p>';
+})();
+</script>
+</body>
+</html>
