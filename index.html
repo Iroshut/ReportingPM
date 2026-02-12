@@ -210,12 +210,14 @@ body {
 }
 .timeline-h-label .thl-type {
   display: inline-block;
-  padding: 1px 6px;
+  padding: 2px 8px;
   border-radius: 8px;
-  color: #fff;
-  font-size: .6rem;
+  color: #fff !important;
+  font-size: .62rem;
   font-weight: 600;
-  margin-top: 2px;
+  margin-top: 3px;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 /* ── Légende ── */
@@ -534,15 +536,24 @@ body {
     const maxPoints = Math.min(allPoints.length, 20);
     const selectedPoints = allPoints.slice(0, maxPoints);
 
+    // Spread points evenly to avoid overlap on close dates
+    // Each point gets an evenly spaced position based on its index
+    const totalPoints = selectedPoints.length;
+
     selectedPoints.forEach((pt, i) => {
       const { day, action: a } = pt;
       const cfg = getTypeConfig(a.type);
-      const pct = ((day - 1) / (daysInMonth - 1)) * 100;
-      const above = i % 2 === 0;
-      const connH = 35 + (i % 4) * 14;
+      const color = cfg.color;
 
-      friseHtml += `<div class="timeline-h-point" style="left:${pct}%;color:${cfg.color};background:${cfg.color}" title="${day} ${monthName} — ${a.action}"></div>`;
-      friseHtml += `<div class="timeline-h-connector" style="left:${pct}%;background:${cfg.color};opacity:.3;${above ? 'bottom:50%;height:' + connH + 'px' : 'top:50%;height:' + connH + 'px'}"></div>`;
+      // Use index-based spacing (even distribution) instead of date-based
+      const pct = totalPoints > 1 ? (i / (totalPoints - 1)) * 100 : 50;
+
+      // Alternate above/below, vary connector heights more for close points
+      const above = i % 2 === 0;
+      const connH = 40 + (i % 3) * 16;
+
+      friseHtml += `<div class="timeline-h-point" style="left:${pct}%;color:${color};background:${color}" title="${day} ${monthName} — ${a.action}"></div>`;
+      friseHtml += `<div class="timeline-h-connector" style="left:${pct}%;background:${color};opacity:.35;${above ? 'bottom:50%;height:' + connH + 'px' : 'top:50%;height:' + connH + 'px'}"></div>`;
 
       const labelPos = above
         ? 'bottom:' + (50 + connH / 3 + 5) + '%'
@@ -552,8 +563,8 @@ body {
 
       friseHtml += `<div class="timeline-h-label" style="left:${pct}%;${labelPos}">
         <div class="thl-date">${day} ${monthName.substring(0, 3)}.</div>
-        <div class="thl-action" style="font-weight:700;color:#333">${esc(a.action)}</div>
-        <span class="thl-type" style="background:${cfg.color}">${cfg.icon} ${a.type}</span>
+        <div class="thl-action">${esc(a.action)}</div>
+        <span class="thl-type" style="background-color:${color} !important">${cfg.icon} ${a.type}</span>
         ${hasDesc ? '<div style="color:#999;font-size:.55rem;margin-top:1px">&#9654; détail</div>' : ''}
       </div>`;
     });
