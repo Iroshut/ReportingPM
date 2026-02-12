@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frise Chronologique - CRA Mensuel</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --reunion: #4A90D9;
+  --developpement: #27AE60;
+  --support: #E74C3C;
+  --formation: #F39C12;
+  --administration: #8E44AD;
+  --autre: #95A5A6;
+  --bg: #1a1a2e;
+  --surface: #16213e;
+  --text: #e0e0e0;
+  --text-light: #a0a0b0;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Upload Screen ── */
+#upload-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+#upload-screen h1 {
+  font-size: 2.4rem;
+  margin-bottom: .5rem;
+  background: linear-gradient(135deg, var(--reunion), var(--developpement));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+#upload-screen p.subtitle {
+  color: var(--text-light);
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+#drop-zone {
+  width: 500px;
+  max-width: 90vw;
+  padding: 3rem 2rem;
+  border: 2px dashed #444;
+  border-radius: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .3s;
+  background: var(--surface);
+}
+#drop-zone:hover, #drop-zone.dragover {
+  border-color: var(--reunion);
+  background: rgba(74, 144, 217, .08);
+}
+#drop-zone .icon { font-size: 3rem; margin-bottom: 1rem; }
+#drop-zone .label { font-size: 1.1rem; color: var(--text); }
+#drop-zone .hint { font-size: .85rem; color: var(--text-light); margin-top: .5rem; }
+#file-input { display: none; }
+
+.demo-btn {
+  margin-top: 1.5rem;
+  padding: .7rem 1.6rem;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: .95rem;
+  transition: all .3s;
+}
+.demo-btn:hover { border-color: var(--reunion); color: var(--text); }
+
+/* ── Viewer ── */
+#frise-viewer {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 2rem 1rem 4rem;
+  gap: 2rem;
+}
+#frise-viewer.active { display: flex; }
+
+/* ── Toolbar ── */
+#toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .8rem 1.5rem;
+  background: rgba(22, 33, 62, .95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  width: 1200px;
+  max-width: 95vw;
+}
+#toolbar button {
+  background: none;
+  border: 1px solid #444;
+  color: var(--text);
+  padding: .5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: .9rem;
+  transition: all .2s;
+  white-space: nowrap;
+}
+#toolbar button:hover { border-color: var(--reunion); background: rgba(74,144,217,.1); }
+#toolbar .spacer { flex: 1; }
+
+#export-btn {
+  background: linear-gradient(135deg, var(--reunion), #3a7bd5) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* ── Cards (frise + focus slides) ── */
+.card {
+  background: #fff;
+  color: #333;
+  border-radius: 14px;
+  width: 1200px;
+  max-width: 95vw;
+  padding: 40px 50px 30px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.3);
+}
+
+.card h2 {
+  font-size: 1.5rem;
+  color: #1a1a2e;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Timeline Track ── */
+.timeline-h-track {
+  position: relative;
+  height: 380px;
+  margin: 0 30px;
+}
+
+.timeline-h-line {
+  position: absolute;
+  top: 50%;
+  left: 0; right: 0;
+  height: 3px;
+  background: #e0e0e0;
+  border-radius: 2px;
+}
+
+.timeline-h-point {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px currentColor;
+  z-index: 2;
+  cursor: default;
+  transition: transform .2s;
+}
+.timeline-h-point:hover { transform: translate(-50%, -50%) scale(1.3); }
+
+.timeline-h-connector {
+  position: absolute;
+  transform: translateX(-50%);
+  width: 1px;
+  z-index: 1;
+}
+
+.timeline-h-label {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: .7rem;
+  text-align: center;
+  max-width: 110px;
+  line-height: 1.3;
+  z-index: 3;
+}
+.timeline-h-label .thl-date {
+  font-weight: 700;
+  color: #333;
+  font-size: .75rem;
+}
+.timeline-h-label .thl-action {
+  color: #555;
+  font-size: .68rem;
+}
+.timeline-h-label .thl-type {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: .6rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* ── Légende ── */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid #eee;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .85rem;
+  color: #555;
+}
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.legend-count {
+  font-weight: 600;
+  color: #333;
+  background: #f0f2f5;
+  padding: 1px 7px;
+  border-radius: 8px;
+  font-size: .75rem;
+}
+
+/* ── Focus Slides ── */
+.focus-slide h2 {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+.focus-slide .focus-subtitle {
+  font-size: .9rem;
+  color: #888;
+  font-weight: 400;
+  margin-bottom: 1.5rem;
+}
+
+.focus-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.2rem;
+}
+
+.focus-card {
+  border-radius: 12px;
+  padding: 1.2rem 1.4rem;
+  background: #f8f9fb;
+  border-left: 5px solid #ccc;
+  transition: transform .15s;
+}
+.focus-card:hover { transform: translateY(-2px); }
+
+.focus-card .fc-header {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-bottom: .6rem;
+}
+.focus-card .fc-icon { font-size: 1.2rem; }
+.focus-card .fc-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1a1a2e;
+  flex: 1;
+}
+.focus-card .fc-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 10px;
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 600;
+}
+.focus-card .fc-date {
+  font-size: .78rem;
+  color: #888;
+  margin-bottom: .5rem;
+}
+.focus-card .fc-desc {
+  font-size: .88rem;
+  color: #444;
+  line-height: 1.5;
+  background: #fff;
+  border-radius: 8px;
+  padding: .8rem 1rem;
+  border: 1px solid #eee;
+}
+
+/* ── Separator between sections ── */
+.section-separator {
+  width: 80px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--reunion), var(--developpement));
+  margin: .5rem 0;
+}
+
+/* ── Back to top ── */
+#back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--reunion);
+  color: #fff;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: transform .3s;
+  z-index: 99;
+}
+#back-to-top:hover { transform: scale(1.1); }
+#back-to-top.visible { display: flex; }
+
+/* ── Print / PDF ── */
+@media print {
+  body { background: #fff; }
+  #toolbar, #back-to-top { display: none !important; }
+  .card { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; break-inside: avoid; page-break-inside: avoid; page-break-after: always; }
+  #frise-viewer { padding: 0; gap: 0; }
+  .section-separator { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="upload-screen">
+  <h1>Frise Chronologique</h1>
+  <p class="subtitle">Importez votre fichier Excel pour g&eacute;n&eacute;rer la frise du mois</p>
+  <div id="drop-zone">
+    <div class="icon">📊</div>
+    <div class="label">Glissez votre fichier Excel ici</div>
+    <div class="hint">ou cliquez pour s&eacute;lectionner (.xlsx, .xls, .csv)</div>
+  </div>
+  <input type="file" id="file-input" accept=".xlsx,.xls,.csv">
+  <button class="demo-btn" id="demo-btn">Charger les donn&eacute;es de d&eacute;monstration</button>
+</div>
+
+<div id="frise-viewer">
+  <div id="toolbar">
+    <button id="back-btn">&#8617; Retour</button>
+    <span class="spacer"></span>
+    <button id="export-btn">📄 Export PDF</button>
+  </div>
+  <div id="content-wrapper"></div>
+</div>
+
+<button id="back-to-top" title="Retour en haut">&#8593;</button>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  const TYPE_CONFIG = {
+    'Réunion':        { color: '#4A90D9', icon: '📋' },
+    'Développement':  { color: '#27AE60', icon: '💻' },
+    'Support':        { color: '#E74C3C', icon: '🔧' },
+    'Formation':      { color: '#F39C12', icon: '🎓' },
+    'Administration': { color: '#8E44AD', icon: '📁' },
+    'Autre':          { color: '#95A5A6', icon: '📌' }
+  };
+
+  const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const ITEMS_PER_SLIDE = 6;
+
+  let actions = [];
+  let monthDate = null;
+
+  const uploadScreen = document.getElementById('upload-screen');
+  const friseViewer = document.getElementById('frise-viewer');
+  const contentWrapper = document.getElementById('content-wrapper');
+  const fileInput = document.getElementById('file-input');
+  const dropZone = document.getElementById('drop-zone');
+  const backToTop = document.getElementById('back-to-top');
+
+  function getTypeConfig(type) {
+    return TYPE_CONFIG[type] || TYPE_CONFIG['Autre'];
+  }
+
+  function getDaysInMonth(year, month) {
+    return new Date(year, month + 1, 0).getDate();
+  }
+
+  function formatDate(d) {
+    return d.getDate() + ' ' + MONTHS_FR[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  function groupBy(arr, fn) {
+    const map = {};
+    arr.forEach(item => {
+      const key = fn(item);
+      if (!map[key]) map[key] = [];
+      map[key].push(item);
+    });
+    return map;
+  }
+
+  function esc(s) {
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  function parseFile(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(ws);
+        processData(data);
+      } catch(err) {
+        alert('Erreur lors de la lecture du fichier: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function processData(data) {
+    actions = data.map(row => {
+      let date = row['Date'] || row['date'];
+      if (typeof date === 'string') date = new Date(date);
+      if (typeof date === 'number') date = new Date((date - 25569) * 86400000);
+      const type = row['Type'] || row['type'] || 'Autre';
+      const action = row['Action'] || row['action'] || '';
+      const description = row['Description'] || row['description'] || '';
+      return { date, type, action, description };
+    }).filter(a => a.date instanceof Date && !isNaN(a.date));
+
+    if (actions.length === 0) {
+      alert('Aucune action valide trouvée dans le fichier.');
+      return;
+    }
+    actions.sort((a, b) => a.date - b.date);
+    monthDate = new Date(actions[0].date.getFullYear(), actions[0].date.getMonth(), 1);
+    buildAll();
+  }
+
+  function loadDemo() {
+    const year = 2026, month = 1;
+    actions = [
+      { date: new Date(year, month, 2), type: 'Réunion', action: 'Comité projet X', description: 'Point d\'avancement sprint 12 avec l\'ensemble des parties prenantes. Revue des risques et validation du planning prévisionnel.' },
+      { date: new Date(year, month, 2), type: 'Développement', action: 'Feature Auth', description: 'Implémentation du flux OAuth2 avec gestion des tokens refresh. Intégration avec le provider Azure AD.' },
+      { date: new Date(year, month, 3), type: 'Développement', action: 'API REST', description: 'Création des endpoints CRUD pour la gestion des utilisateurs. Pagination, filtres et validation des données.' },
+      { date: new Date(year, month, 4), type: 'Réunion', action: 'Daily standup', description: '' },
+      { date: new Date(year, month, 4), type: 'Support', action: 'Ticket #1234', description: 'Résolution du bug de connexion affectant les clients VIP. Cause : expiration prématurée des sessions.' },
+      { date: new Date(year, month, 5), type: 'Formation', action: 'Workshop Docker', description: 'Formation de 4h sur la conteneurisation avec Docker et Docker Compose. Exercices pratiques sur le déploiement multi-conteneurs.' },
+      { date: new Date(year, month, 6), type: 'Administration', action: 'Reporting', description: '' },
+      { date: new Date(year, month, 9), type: 'Réunion', action: 'Sprint planning', description: 'Planification du sprint 13. Estimation des user stories, définition du sprint goal et répartition des tâches.' },
+      { date: new Date(year, month, 9), type: 'Développement', action: 'Feature Dashboard', description: 'Développement des composants de visualisation : graphiques en barres, camemberts et KPIs temps réel.' },
+      { date: new Date(year, month, 10), type: 'Développement', action: 'Tests unitaires', description: 'Augmentation de la couverture de tests du module auth de 45% à 87%. Ajout de tests d\'intégration.' },
+      { date: new Date(year, month, 11), type: 'Support', action: 'Incident prod', description: 'Incident critique : timeout sur les requêtes DB en pic de charge. Résolution par optimisation des index et ajout de cache Redis.' },
+      { date: new Date(year, month, 11), type: 'Réunion', action: 'Rétrospective', description: '' },
+      { date: new Date(year, month, 12), type: 'Développement', action: 'Refactoring', description: 'Optimisation des requêtes SQL les plus coûteuses. Réduction du temps de réponse moyen de 800ms à 120ms.' },
+      { date: new Date(year, month, 13), type: 'Formation', action: 'Veille techno', description: 'Étude de faisabilité Kubernetes pour la migration de l\'infrastructure. Comparaison avec la solution ECS actuelle.' },
+      { date: new Date(year, month, 16), type: 'Réunion', action: 'Comité architecture', description: 'Présentation du plan de migration vers une architecture microservices. Validation de la roadmap technique Q2.' },
+      { date: new Date(year, month, 16), type: 'Développement', action: 'Feature Notifs', description: 'Mise en place du système de notifications push (WebSocket + Firebase Cloud Messaging). Support iOS/Android/Web.' },
+      { date: new Date(year, month, 17), type: 'Développement', action: 'CI/CD Pipeline', description: 'Configuration complète du pipeline GitHub Actions : build, tests, analyse Sonar, déploiement staging automatique.' },
+      { date: new Date(year, month, 18), type: 'Support', action: 'Ticket #1267', description: 'Diagnostic et résolution des problèmes de performance sur la page de recherche. Ajout d\'un index full-text.' },
+      { date: new Date(year, month, 19), type: 'Administration', action: 'Entretien annuel', description: '' },
+      { date: new Date(year, month, 20), type: 'Réunion', action: 'Demo sprint 13', description: 'Présentation des livrables du sprint aux stakeholders. Feedback positif sur le dashboard et le système de notifs.' },
+      { date: new Date(year, month, 23), type: 'Développement', action: 'Feature Export', description: 'Développement de l\'export PDF des rapports avec mise en page automatique et graphiques embarqués.' },
+      { date: new Date(year, month, 23), type: 'Réunion', action: 'Point client', description: '' },
+      { date: new Date(year, month, 24), type: 'Développement', action: 'Bug fixes', description: 'Correction de 8 bugs de régression UI identifiés lors de la demo. Principalement des problèmes de responsive.' },
+      { date: new Date(year, month, 25), type: 'Formation', action: 'Conférence DevFest', description: 'Participation au DevFest 2026. Conférences suivies : Web Performance, Architecture hexagonale, IA générative.' },
+      { date: new Date(year, month, 26), type: 'Support', action: 'Ticket #1289', description: 'Migration des données du client Acme Corp vers le nouveau schéma. Script de migration + validation d\'intégrité.' },
+      { date: new Date(year, month, 27), type: 'Réunion', action: 'Sprint review', description: 'Démonstration finale du sprint 13. Toutes les user stories acceptées. Vélocité en hausse de 15%.' },
+      { date: new Date(year, month, 27), type: 'Administration', action: 'Notes de frais', description: '' },
+    ];
+    monthDate = new Date(year, month, 1);
+    buildAll();
+  }
+
+  // ── Build frise + focus slides ──
+  function buildAll() {
+    const year = monthDate.getFullYear();
+    const month = monthDate.getMonth();
+    const monthName = MONTHS_FR[month];
+    const daysInMonth = getDaysInMonth(year, month);
+    const byType = groupBy(actions, a => a.type);
+    const byDay = groupBy(actions, a => a.date.getDate());
+    const usedDays = Object.keys(byDay).map(Number).sort((a, b) => a - b);
+
+    contentWrapper.innerHTML = '';
+
+    // ═══ FRISE ═══
+    const friseCard = document.createElement('div');
+    friseCard.className = 'card';
+    let friseHtml = `<h2>Frise chronologique — ${monthName} ${year}</h2>`;
+    friseHtml += '<div class="timeline-h-track">';
+    friseHtml += '<div class="timeline-h-line"></div>';
+
+    const maxPoints = Math.min(usedDays.length, 16);
+    const selectedDays = usedDays.slice(0, maxPoints);
+
+    selectedDays.forEach((day, i) => {
+      const pct = ((day - 1) / (daysInMonth - 1)) * 100;
+      const dayActions = byDay[day];
+      const mainAction = dayActions[0];
+      const cfg = getTypeConfig(mainAction.type);
+      const above = i % 2 === 0;
+      const connH = 35 + (i % 3) * 18;
+
+      friseHtml += `<div class="timeline-h-point" style="left:${pct}%;color:${cfg.color};background:${cfg.color}" title="${day} ${monthName} — ${mainAction.action}"></div>`;
+      friseHtml += `<div class="timeline-h-connector" style="left:${pct}%;background:${cfg.color};opacity:.3;${above ? 'bottom:50%;height:' + connH + 'px' : 'top:50%;height:' + connH + 'px'}"></div>`;
+
+      const labelPos = above
+        ? 'bottom:' + (50 + connH / 3 + 5) + '%'
+        : 'top:' + (50 + connH / 3 + 5) + '%';
+
+      let extra = dayActions.length > 1 ? ` <span style="color:#999">(+${dayActions.length - 1})</span>` : '';
+      const hasDesc = mainAction.description.trim() !== '';
+
+      friseHtml += `<div class="timeline-h-label" style="left:${pct}%;${labelPos}">
+        <div class="thl-date">${day} ${monthName.substring(0, 3)}.</div>
+        <div class="thl-action">${cfg.icon} ${esc(mainAction.action)}${extra}</div>
+        <span class="thl-type" style="background:${cfg.color}">${mainAction.type}</span>
+        ${hasDesc ? '<div style="color:#999;font-size:.55rem;margin-top:1px">&#9654; détail ci-dessous</div>' : ''}
+      </div>`;
+    });
+
+    friseHtml += '</div>';
+
+    // Légende
+    friseHtml += '<div class="legend">';
+    Object.entries(TYPE_CONFIG).forEach(([type, cfg]) => {
+      const count = (byType[type] || []).length;
+      if (count === 0) return;
+      friseHtml += `<div class="legend-item">
+        <span class="legend-color" style="background:${cfg.color}"></span>
+        <span>${cfg.icon} ${type}</span>
+        <span class="legend-count">${count}</span>
+      </div>`;
+    });
+    friseHtml += '</div>';
+
+    friseCard.innerHTML = friseHtml;
+    contentWrapper.appendChild(friseCard);
+
+    // ═══ FOCUS SLIDES ═══
+    const withDesc = actions.filter(a => a.description && a.description.trim() !== '');
+
+    if (withDesc.length > 0) {
+      // Separator
+      const sep = document.createElement('div');
+      sep.className = 'section-separator';
+      contentWrapper.appendChild(sep);
+
+      // Split into pages of ITEMS_PER_SLIDE
+      const totalPages = Math.ceil(withDesc.length / ITEMS_PER_SLIDE);
+
+      for (let page = 0; page < totalPages; page++) {
+        const pageItems = withDesc.slice(page * ITEMS_PER_SLIDE, (page + 1) * ITEMS_PER_SLIDE);
+        const slideCard = document.createElement('div');
+        slideCard.className = 'card focus-slide';
+
+        let slideHtml = `<h2>Détail des actions${totalPages > 1 ? ` <span style="font-size:.85rem;color:#999;font-weight:400">(${page + 1}/${totalPages})</span>` : ''}</h2>`;
+        slideHtml += `<div class="focus-subtitle">${withDesc.length} actions avec description — ${monthName} ${year}</div>`;
+        slideHtml += '<div class="focus-grid">';
+
+        pageItems.forEach(a => {
+          const cfg = getTypeConfig(a.type);
+          slideHtml += `<div class="focus-card" style="border-left-color:${cfg.color}">
+            <div class="fc-date">${formatDate(a.date)}</div>
+            <div class="fc-header">
+              <span class="fc-icon">${cfg.icon}</span>
+              <span class="fc-title">${esc(a.action)}</span>
+              <span class="fc-badge" style="background:${cfg.color}">${a.type}</span>
+            </div>
+            <div class="fc-desc">${esc(a.description)}</div>
+          </div>`;
+        });
+
+        slideHtml += '</div>';
+        slideCard.innerHTML = slideHtml;
+        contentWrapper.appendChild(slideCard);
+      }
+    }
+
+    // Show
+    uploadScreen.style.display = 'none';
+    friseViewer.classList.add('active');
+    window.scrollTo({ top: 0 });
+  }
+
+  // ── Export PDF ──
+  async function exportPDF() {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9999;color:#fff;font-size:1.2rem;flex-direction:column;gap:1rem';
+    overlay.innerHTML = '<div style="width:40px;height:40px;border:4px solid rgba(255,255,255,.2);border-top-color:#4A90D9;border-radius:50%;animation:spin .8s linear infinite"></div><div>Export en cours...</div>';
+    document.body.appendChild(overlay);
+
+    try {
+      const allCards = Array.from(contentWrapper.querySelectorAll('.card'));
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '0';
+      document.body.appendChild(container);
+
+      allCards.forEach(card => {
+        const clone = card.cloneNode(true);
+        clone.style.width = '297mm';
+        clone.style.minHeight = '190mm';
+        clone.style.borderRadius = '0';
+        clone.style.boxShadow = 'none';
+        clone.style.pageBreakAfter = 'always';
+        clone.style.padding = '25mm 20mm';
+        container.appendChild(clone);
+      });
+
+      await html2pdf().set({
+        margin: 0,
+        filename: `Frise_${MONTHS_FR[monthDate.getMonth()]}_${monthDate.getFullYear()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: ['css', 'legacy'] }
+      }).from(container).save();
+
+      document.body.removeChild(container);
+    } catch(err) {
+      alert('Erreur: ' + err.message);
+    } finally {
+      document.body.removeChild(overlay);
+    }
+  }
+
+  // ── Events ──
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) parseFile(e.target.files[0]); });
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) parseFile(e.dataTransfer.files[0]);
+  });
+
+  document.getElementById('demo-btn').addEventListener('click', loadDemo);
+  document.getElementById('export-btn').addEventListener('click', exportPDF);
+  document.getElementById('back-btn').addEventListener('click', () => {
+    friseViewer.classList.remove('active');
+    uploadScreen.style.display = 'flex';
+    contentWrapper.innerHTML = '';
+    actions = [];
+  });
+
+  window.addEventListener('scroll', () => {
+    backToTop.classList.toggle('visible', window.scrollY > 400);
+  });
+  backToTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+})();
+</script>
+</body>
+</html>

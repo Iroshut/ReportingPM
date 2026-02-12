@@ -1,0 +1,28 @@
+Date,Type,Action,Description
+2026-02-02,Réunion,Comité projet X,Point d'avancement sprint 12
+2026-02-02,Développement,Feature Auth,Implémentation OAuth2
+2026-02-03,Développement,API REST,Endpoints CRUD utilisateurs
+2026-02-04,Réunion,Daily standup,Synchronisation équipe
+2026-02-04,Support,Ticket #1234,Bug connexion client VIP
+2026-02-05,Formation,Workshop Docker,Formation conteneurisation
+2026-02-06,Administration,Reporting,Rapport mensuel janvier
+2026-02-09,Réunion,Sprint planning,Planification sprint 13
+2026-02-09,Développement,Feature Dashboard,Composants React charts
+2026-02-10,Développement,Tests unitaires,Couverture module auth
+2026-02-11,Support,Incident prod,Résolution timeout DB
+2026-02-11,Réunion,Rétrospective,Bilan sprint 12
+2026-02-12,Développement,Refactoring,Optimisation requêtes SQL
+2026-02-13,Formation,Veille techno,Étude Kubernetes
+2026-02-16,Réunion,Comité architecture,Migration microservices
+2026-02-16,Développement,Feature Notifs,Système de notifications push
+2026-02-17,Développement,CI/CD Pipeline,Configuration GitHub Actions
+2026-02-18,Support,Ticket #1267,Performance page recherche
+2026-02-19,Administration,Entretien annuel,Entretien avec manager
+2026-02-20,Réunion,Demo sprint 13,Présentation livrables
+2026-02-23,Développement,Feature Export,Export PDF rapports
+2026-02-23,Réunion,Point client,Revue des exigences
+2026-02-24,Développement,Bug fixes,Correction régression UI
+2026-02-25,Formation,Conférence DevFest,Participation DevFest 2026
+2026-02-26,Support,Ticket #1289,Migration données client
+2026-02-27,Réunion,Sprint review,Démonstration sprint 13
+2026-02-27,Administration,Notes de frais,Saisie notes de frais février
