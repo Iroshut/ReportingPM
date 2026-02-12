@@ -362,7 +362,7 @@ body {
 
 <div id="upload-screen">
   <h1>Frise Chronologique</h1>
-  <p class="subtitle">Importez votre fichier Excel pour g&eacute;n&eacute;rer la frise du mois</p>
+  <p class="subtitle">Importez votre fichier Excel pour g&eacute;n&eacute;rer les frises chronologiques</p>
   <div id="drop-zone">
     <div class="icon">📊</div>
     <div class="label">Glissez votre fichier Excel ici</div>
@@ -402,7 +402,6 @@ body {
   const ITEMS_PER_SLIDE = 6;
 
   let actions = [];
-  let monthDate = null;
 
   const uploadScreen = document.getElementById('upload-screen');
   const friseViewer = document.getElementById('frise-viewer');
@@ -470,85 +469,117 @@ body {
       return;
     }
     actions.sort((a, b) => a.date - b.date);
-    monthDate = new Date(actions[0].date.getFullYear(), actions[0].date.getMonth(), 1);
     buildAll();
   }
 
   function loadDemo() {
-    const year = 2026, month = 1;
+    const year = 2026;
     actions = [
-      { date: new Date(year, month, 2), type: 'Réunion', action: 'Comité projet X', description: 'Point d\'avancement sprint 12 avec l\'ensemble des parties prenantes. Revue des risques et validation du planning prévisionnel.' },
-      { date: new Date(year, month, 2), type: 'Développement', action: 'Feature Auth', description: 'Implémentation du flux OAuth2 avec gestion des tokens refresh. Intégration avec le provider Azure AD.' },
-      { date: new Date(year, month, 3), type: 'Développement', action: 'API REST', description: 'Création des endpoints CRUD pour la gestion des utilisateurs. Pagination, filtres et validation des données.' },
-      { date: new Date(year, month, 4), type: 'Réunion', action: 'Daily standup', description: '' },
-      { date: new Date(year, month, 4), type: 'Support', action: 'Ticket #1234', description: 'Résolution du bug de connexion affectant les clients VIP. Cause : expiration prématurée des sessions.' },
-      { date: new Date(year, month, 5), type: 'Formation', action: 'Workshop Docker', description: 'Formation de 4h sur la conteneurisation avec Docker et Docker Compose. Exercices pratiques sur le déploiement multi-conteneurs.' },
-      { date: new Date(year, month, 6), type: 'Administration', action: 'Reporting', description: '' },
-      { date: new Date(year, month, 9), type: 'Réunion', action: 'Sprint planning', description: 'Planification du sprint 13. Estimation des user stories, définition du sprint goal et répartition des tâches.' },
-      { date: new Date(year, month, 9), type: 'Développement', action: 'Feature Dashboard', description: 'Développement des composants de visualisation : graphiques en barres, camemberts et KPIs temps réel.' },
-      { date: new Date(year, month, 10), type: 'Développement', action: 'Tests unitaires', description: 'Augmentation de la couverture de tests du module auth de 45% à 87%. Ajout de tests d\'intégration.' },
-      { date: new Date(year, month, 11), type: 'Support', action: 'Incident prod', description: 'Incident critique : timeout sur les requêtes DB en pic de charge. Résolution par optimisation des index et ajout de cache Redis.' },
-      { date: new Date(year, month, 11), type: 'Réunion', action: 'Rétrospective', description: '' },
-      { date: new Date(year, month, 12), type: 'Développement', action: 'Refactoring', description: 'Optimisation des requêtes SQL les plus coûteuses. Réduction du temps de réponse moyen de 800ms à 120ms.' },
-      { date: new Date(year, month, 13), type: 'Formation', action: 'Veille techno', description: 'Étude de faisabilité Kubernetes pour la migration de l\'infrastructure. Comparaison avec la solution ECS actuelle.' },
-      { date: new Date(year, month, 16), type: 'Réunion', action: 'Comité architecture', description: 'Présentation du plan de migration vers une architecture microservices. Validation de la roadmap technique Q2.' },
-      { date: new Date(year, month, 16), type: 'Développement', action: 'Feature Notifs', description: 'Mise en place du système de notifications push (WebSocket + Firebase Cloud Messaging). Support iOS/Android/Web.' },
-      { date: new Date(year, month, 17), type: 'Développement', action: 'CI/CD Pipeline', description: 'Configuration complète du pipeline GitHub Actions : build, tests, analyse Sonar, déploiement staging automatique.' },
-      { date: new Date(year, month, 18), type: 'Support', action: 'Ticket #1267', description: 'Diagnostic et résolution des problèmes de performance sur la page de recherche. Ajout d\'un index full-text.' },
-      { date: new Date(year, month, 19), type: 'Administration', action: 'Entretien annuel', description: '' },
-      { date: new Date(year, month, 20), type: 'Réunion', action: 'Demo sprint 13', description: 'Présentation des livrables du sprint aux stakeholders. Feedback positif sur le dashboard et le système de notifs.' },
-      { date: new Date(year, month, 23), type: 'Développement', action: 'Feature Export', description: 'Développement de l\'export PDF des rapports avec mise en page automatique et graphiques embarqués.' },
-      { date: new Date(year, month, 23), type: 'Réunion', action: 'Point client', description: '' },
-      { date: new Date(year, month, 24), type: 'Développement', action: 'Bug fixes', description: 'Correction de 8 bugs de régression UI identifiés lors de la demo. Principalement des problèmes de responsive.' },
-      { date: new Date(year, month, 25), type: 'Formation', action: 'Conférence DevFest', description: 'Participation au DevFest 2026. Conférences suivies : Web Performance, Architecture hexagonale, IA générative.' },
-      { date: new Date(year, month, 26), type: 'Support', action: 'Ticket #1289', description: 'Migration des données du client Acme Corp vers le nouveau schéma. Script de migration + validation d\'intégrité.' },
-      { date: new Date(year, month, 27), type: 'Réunion', action: 'Sprint review', description: 'Démonstration finale du sprint 13. Toutes les user stories acceptées. Vélocité en hausse de 15%.' },
-      { date: new Date(year, month, 27), type: 'Administration', action: 'Notes de frais', description: '' },
+      // ── Janvier 2026 ──
+      { date: new Date(year, 0, 5), type: 'Réunion', action: 'Kick-off projet', description: 'Lancement officiel du projet avec définition du périmètre, des rôles et du calendrier prévisionnel.' },
+      { date: new Date(year, 0, 6), type: 'Développement', action: 'Setup technique', description: 'Mise en place du monorepo, configuration ESLint, Prettier, Husky. Création du squelette applicatif.' },
+      { date: new Date(year, 0, 7), type: 'Développement', action: 'Maquettes UI', description: 'Intégration des maquettes Figma en composants React. Design system avec Storybook.' },
+      { date: new Date(year, 0, 8), type: 'Formation', action: 'Onboarding équipe', description: 'Session d\'onboarding pour les 3 nouveaux développeurs. Présentation de l\'architecture et des conventions.' },
+      { date: new Date(year, 0, 12), type: 'Réunion', action: 'Sprint planning S1', description: 'Planification du sprint 11. Définition du backlog initial et estimation en story points.' },
+      { date: new Date(year, 0, 13), type: 'Développement', action: 'Feature Login', description: 'Écran de connexion avec validation des champs, gestion des erreurs et redirection post-auth.' },
+      { date: new Date(year, 0, 14), type: 'Support', action: 'Ticket #1180', description: 'Correction d\'un bug d\'affichage sur Safari iOS. Problème de flexbox sur les anciens modèles.' },
+      { date: new Date(year, 0, 19), type: 'Réunion', action: 'Point client', description: '' },
+      { date: new Date(year, 0, 20), type: 'Développement', action: 'Feature Profil', description: 'Page profil utilisateur avec édition des informations, upload d\'avatar et gestion des préférences.' },
+      { date: new Date(year, 0, 21), type: 'Administration', action: 'Reporting mensuel', description: '' },
+      { date: new Date(year, 0, 26), type: 'Réunion', action: 'Demo sprint 11', description: 'Démonstration des livrables du sprint 11. Validation du module login et de la page profil.' },
+      { date: new Date(year, 0, 27), type: 'Développement', action: 'Tests E2E', description: 'Mise en place de Playwright pour les tests end-to-end. Scénarios de connexion et navigation.' },
+      // ── Février 2026 ──
+      { date: new Date(year, 1, 2), type: 'Réunion', action: 'Comité projet X', description: 'Point d\'avancement sprint 12 avec l\'ensemble des parties prenantes. Revue des risques et validation du planning prévisionnel.' },
+      { date: new Date(year, 1, 2), type: 'Développement', action: 'Feature Auth', description: 'Implémentation du flux OAuth2 avec gestion des tokens refresh. Intégration avec le provider Azure AD.' },
+      { date: new Date(year, 1, 3), type: 'Développement', action: 'API REST', description: 'Création des endpoints CRUD pour la gestion des utilisateurs. Pagination, filtres et validation des données.' },
+      { date: new Date(year, 1, 4), type: 'Réunion', action: 'Daily standup', description: '' },
+      { date: new Date(year, 1, 4), type: 'Support', action: 'Ticket #1234', description: 'Résolution du bug de connexion affectant les clients VIP. Cause : expiration prématurée des sessions.' },
+      { date: new Date(year, 1, 5), type: 'Formation', action: 'Workshop Docker', description: 'Formation de 4h sur la conteneurisation avec Docker et Docker Compose. Exercices pratiques sur le déploiement multi-conteneurs.' },
+      { date: new Date(year, 1, 6), type: 'Administration', action: 'Reporting', description: '' },
+      { date: new Date(year, 1, 9), type: 'Réunion', action: 'Sprint planning', description: 'Planification du sprint 13. Estimation des user stories, définition du sprint goal et répartition des tâches.' },
+      { date: new Date(year, 1, 9), type: 'Développement', action: 'Feature Dashboard', description: 'Développement des composants de visualisation : graphiques en barres, camemberts et KPIs temps réel.' },
+      { date: new Date(year, 1, 10), type: 'Développement', action: 'Tests unitaires', description: 'Augmentation de la couverture de tests du module auth de 45% à 87%. Ajout de tests d\'intégration.' },
+      { date: new Date(year, 1, 11), type: 'Support', action: 'Incident prod', description: 'Incident critique : timeout sur les requêtes DB en pic de charge. Résolution par optimisation des index et ajout de cache Redis.' },
+      { date: new Date(year, 1, 11), type: 'Réunion', action: 'Rétrospective', description: '' },
+      { date: new Date(year, 1, 12), type: 'Développement', action: 'Refactoring', description: 'Optimisation des requêtes SQL les plus coûteuses. Réduction du temps de réponse moyen de 800ms à 120ms.' },
+      { date: new Date(year, 1, 13), type: 'Formation', action: 'Veille techno', description: 'Étude de faisabilité Kubernetes pour la migration de l\'infrastructure. Comparaison avec la solution ECS actuelle.' },
+      { date: new Date(year, 1, 16), type: 'Réunion', action: 'Comité architecture', description: 'Présentation du plan de migration vers une architecture microservices. Validation de la roadmap technique Q2.' },
+      { date: new Date(year, 1, 16), type: 'Développement', action: 'Feature Notifs', description: 'Mise en place du système de notifications push (WebSocket + Firebase Cloud Messaging). Support iOS/Android/Web.' },
+      { date: new Date(year, 1, 17), type: 'Développement', action: 'CI/CD Pipeline', description: 'Configuration complète du pipeline GitHub Actions : build, tests, analyse Sonar, déploiement staging automatique.' },
+      { date: new Date(year, 1, 18), type: 'Support', action: 'Ticket #1267', description: 'Diagnostic et résolution des problèmes de performance sur la page de recherche. Ajout d\'un index full-text.' },
+      { date: new Date(year, 1, 19), type: 'Administration', action: 'Entretien annuel', description: '' },
+      { date: new Date(year, 1, 20), type: 'Réunion', action: 'Demo sprint 13', description: 'Présentation des livrables du sprint aux stakeholders. Feedback positif sur le dashboard et le système de notifs.' },
+      { date: new Date(year, 1, 23), type: 'Développement', action: 'Feature Export', description: 'Développement de l\'export PDF des rapports avec mise en page automatique et graphiques embarqués.' },
+      { date: new Date(year, 1, 23), type: 'Réunion', action: 'Point client', description: '' },
+      { date: new Date(year, 1, 24), type: 'Développement', action: 'Bug fixes', description: 'Correction de 8 bugs de régression UI identifiés lors de la demo. Principalement des problèmes de responsive.' },
+      { date: new Date(year, 1, 25), type: 'Formation', action: 'Conférence DevFest', description: 'Participation au DevFest 2026. Conférences suivies : Web Performance, Architecture hexagonale, IA générative.' },
+      { date: new Date(year, 1, 26), type: 'Support', action: 'Ticket #1289', description: 'Migration des données du client Acme Corp vers le nouveau schéma. Script de migration + validation d\'intégrité.' },
+      { date: new Date(year, 1, 27), type: 'Réunion', action: 'Sprint review', description: 'Démonstration finale du sprint 13. Toutes les user stories acceptées. Vélocité en hausse de 15%.' },
+      { date: new Date(year, 1, 27), type: 'Administration', action: 'Notes de frais', description: '' },
+      // ── Mars 2026 ──
+      { date: new Date(year, 2, 2), type: 'Réunion', action: 'Sprint planning S14', description: 'Planification du sprint 14. Focus sur le module de reporting et l\'optimisation des performances.' },
+      { date: new Date(year, 2, 3), type: 'Développement', action: 'Feature Reporting', description: 'Développement du module de reporting avec génération de graphiques dynamiques et filtres avancés.' },
+      { date: new Date(year, 2, 4), type: 'Développement', action: 'Feature Search', description: 'Moteur de recherche full-text avec ElasticSearch. Auto-complétion et suggestions contextuelles.' },
+      { date: new Date(year, 2, 5), type: 'Support', action: 'Ticket #1302', description: 'Problème de synchronisation des données en mode hors-ligne. Correction du mécanisme de queue et retry.' },
+      { date: new Date(year, 2, 9), type: 'Réunion', action: 'Revue de code', description: '' },
+      { date: new Date(year, 2, 10), type: 'Développement', action: 'Monitoring', description: 'Mise en place de Datadog pour le monitoring applicatif. Dashboards, alertes et APM.' },
+      { date: new Date(year, 2, 11), type: 'Formation', action: 'Workshop Kubernetes', description: 'Formation pratique de 2 jours sur Kubernetes. Déploiement, scaling et gestion des secrets.' },
+      { date: new Date(year, 2, 16), type: 'Réunion', action: 'Demo sprint 14', description: 'Présentation du module de reporting et du moteur de recherche. Retours très positifs du client.' },
+      { date: new Date(year, 2, 17), type: 'Développement', action: 'Performance tuning', description: 'Optimisation du bundle frontend : code splitting, lazy loading, compression des assets. LCP passé de 3.2s à 1.1s.' },
+      { date: new Date(year, 2, 18), type: 'Administration', action: 'Bilan trimestriel', description: 'Rédaction du bilan Q1 2026. Analyse des KPIs projet et préparation de la roadmap Q2.' },
+      { date: new Date(year, 2, 23), type: 'Développement', action: 'Migration DB', description: 'Migration de PostgreSQL 14 vers PostgreSQL 16. Tests de non-régression et validation des performances.' },
+      { date: new Date(year, 2, 24), type: 'Support', action: 'Ticket #1345', description: 'Résolution d\'un bug critique sur le calcul des permissions. Impact sur 200 utilisateurs.' },
+      { date: new Date(year, 2, 25), type: 'Réunion', action: 'Rétrospective Q1', description: 'Rétrospective du trimestre. Points positifs : vélocité, qualité. Axes d\'amélioration : documentation, tests.' },
+      { date: new Date(year, 2, 30), type: 'Réunion', action: 'Planning Q2', description: 'Définition des objectifs et de la roadmap pour le Q2 2026. Nouvelles features prioritaires identifiées.' },
     ];
-    monthDate = new Date(year, month, 1);
     buildAll();
   }
 
-  // ── Build frise + focus slides ──
-  function buildAll() {
-    const year = monthDate.getFullYear();
-    const month = monthDate.getMonth();
-    const monthName = MONTHS_FR[month];
-    const daysInMonth = getDaysInMonth(year, month);
-    const byType = groupBy(actions, a => a.type);
-    const byDay = groupBy(actions, a => a.date.getDate());
+  // ── Group actions by year-month ──
+  function getMonthKey(d) {
+    return d.getFullYear() + '-' + String(d.getMonth()).padStart(2, '0');
+  }
+
+  function getMonthGroups() {
+    const map = {};
+    actions.forEach(a => {
+      const key = getMonthKey(a.date);
+      if (!map[key]) map[key] = [];
+      map[key].push(a);
+    });
+    return Object.keys(map).sort().map(key => ({
+      key,
+      year: parseInt(key.split('-')[0]),
+      month: parseInt(key.split('-')[1]),
+      actions: map[key]
+    }));
+  }
+
+  // ── Build one frise card for a month ──
+  function buildFriseCard(monthActions, monthName, year) {
+    const byType = groupBy(monthActions, a => a.type);
+    const byDay = groupBy(monthActions, a => a.date.getDate());
     const usedDays = Object.keys(byDay).map(Number).sort((a, b) => a - b);
 
-    contentWrapper.innerHTML = '';
-
-    // ═══ FRISE ═══
     const friseCard = document.createElement('div');
     friseCard.className = 'card';
     let friseHtml = `<h2>Frise chronologique — ${monthName} ${year}</h2>`;
     friseHtml += '<div class="timeline-h-track">';
     friseHtml += '<div class="timeline-h-line"></div>';
 
-    // Flatten all actions as individual points on the timeline
     const allPoints = [];
     usedDays.forEach(day => {
       byDay[day].forEach(a => allPoints.push({ day, action: a }));
     });
     const maxPoints = Math.min(allPoints.length, 20);
     const selectedPoints = allPoints.slice(0, maxPoints);
-
-    // Spread points evenly to avoid overlap on close dates
-    // Each point gets an evenly spaced position based on its index
     const totalPoints = selectedPoints.length;
 
     selectedPoints.forEach((pt, i) => {
       const { day, action: a } = pt;
       const cfg = getTypeConfig(a.type);
       const color = cfg.color;
-
-      // Use index-based spacing (even distribution) instead of date-based
       const pct = totalPoints > 1 ? (i / (totalPoints - 1)) * 100 : 50;
-
-      // Alternate above/below, vary connector heights more for close points
       const above = i % 2 === 0;
       const connH = 40 + (i % 3) * 16;
 
@@ -558,7 +589,6 @@ body {
       const labelPos = above
         ? 'bottom:' + (50 + connH / 3 + 5) + '%'
         : 'top:' + (50 + connH / 3 + 5) + '%';
-
       const hasDesc = a.description && a.description.trim() !== '';
 
       friseHtml += `<div class="timeline-h-label" style="left:${pct}%;${labelPos}">
@@ -585,47 +615,69 @@ body {
     friseHtml += '</div>';
 
     friseCard.innerHTML = friseHtml;
-    contentWrapper.appendChild(friseCard);
+    return friseCard;
+  }
 
-    // ═══ FOCUS SLIDES ═══
-    const withDesc = actions.filter(a => a.description && a.description.trim() !== '');
+  // ── Build focus slides for a month ──
+  function buildFocusSlides(monthActions, monthName, year) {
+    const withDesc = monthActions.filter(a => a.description && a.description.trim() !== '');
+    if (withDesc.length === 0) return [];
 
-    if (withDesc.length > 0) {
-      // Separator
-      const sep = document.createElement('div');
-      sep.className = 'section-separator';
-      contentWrapper.appendChild(sep);
+    const totalPages = Math.ceil(withDesc.length / ITEMS_PER_SLIDE);
+    const slides = [];
 
-      // Split into pages of ITEMS_PER_SLIDE
-      const totalPages = Math.ceil(withDesc.length / ITEMS_PER_SLIDE);
+    for (let page = 0; page < totalPages; page++) {
+      const pageItems = withDesc.slice(page * ITEMS_PER_SLIDE, (page + 1) * ITEMS_PER_SLIDE);
+      const slideCard = document.createElement('div');
+      slideCard.className = 'card focus-slide';
 
-      for (let page = 0; page < totalPages; page++) {
-        const pageItems = withDesc.slice(page * ITEMS_PER_SLIDE, (page + 1) * ITEMS_PER_SLIDE);
-        const slideCard = document.createElement('div');
-        slideCard.className = 'card focus-slide';
+      let slideHtml = `<h2>Détail des actions — ${monthName} ${year}${totalPages > 1 ? ` <span style="font-size:.85rem;color:#999;font-weight:400">(${page + 1}/${totalPages})</span>` : ''}</h2>`;
+      slideHtml += `<div class="focus-subtitle">${withDesc.length} actions avec description</div>`;
+      slideHtml += '<div class="focus-grid">';
 
-        let slideHtml = `<h2>Détail des actions${totalPages > 1 ? ` <span style="font-size:.85rem;color:#999;font-weight:400">(${page + 1}/${totalPages})</span>` : ''}</h2>`;
-        slideHtml += `<div class="focus-subtitle">${withDesc.length} actions avec description — ${monthName} ${year}</div>`;
-        slideHtml += '<div class="focus-grid">';
+      pageItems.forEach(a => {
+        const cfg = getTypeConfig(a.type);
+        slideHtml += `<div class="focus-card" style="border-left-color:${cfg.color}">
+          <div class="fc-date">${formatDate(a.date)}</div>
+          <div class="fc-header">
+            <span class="fc-icon">${cfg.icon}</span>
+            <span class="fc-title">${esc(a.action)}</span>
+            <span class="fc-badge" style="background:${cfg.color}">${a.type}</span>
+          </div>
+          <div class="fc-desc">${esc(a.description)}</div>
+        </div>`;
+      });
 
-        pageItems.forEach(a => {
-          const cfg = getTypeConfig(a.type);
-          slideHtml += `<div class="focus-card" style="border-left-color:${cfg.color}">
-            <div class="fc-date">${formatDate(a.date)}</div>
-            <div class="fc-header">
-              <span class="fc-icon">${cfg.icon}</span>
-              <span class="fc-title">${esc(a.action)}</span>
-              <span class="fc-badge" style="background:${cfg.color}">${a.type}</span>
-            </div>
-            <div class="fc-desc">${esc(a.description)}</div>
-          </div>`;
-        });
-
-        slideHtml += '</div>';
-        slideCard.innerHTML = slideHtml;
-        contentWrapper.appendChild(slideCard);
-      }
+      slideHtml += '</div>';
+      slideCard.innerHTML = slideHtml;
+      slides.push(slideCard);
     }
+    return slides;
+  }
+
+  // ── Build all months ──
+  function buildAll() {
+    contentWrapper.innerHTML = '';
+    const monthGroups = getMonthGroups();
+
+    monthGroups.forEach((group, gi) => {
+      const monthName = MONTHS_FR[group.month];
+      const year = group.year;
+
+      // Add separator between months
+      if (gi > 0) {
+        const sep = document.createElement('div');
+        sep.className = 'section-separator';
+        contentWrapper.appendChild(sep);
+      }
+
+      // Frise for this month
+      contentWrapper.appendChild(buildFriseCard(group.actions, monthName, year));
+
+      // Focus slides for this month
+      const focusSlides = buildFocusSlides(group.actions, monthName, year);
+      focusSlides.forEach(slide => contentWrapper.appendChild(slide));
+    });
 
     // Show
     uploadScreen.style.display = 'none';
@@ -661,7 +713,7 @@ body {
 
       await html2pdf().set({
         margin: 0,
-        filename: `Frise_${MONTHS_FR[monthDate.getMonth()]}_${monthDate.getFullYear()}.pdf`,
+        filename: `Frise_CRA_${actions[0].date.getFullYear()}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
