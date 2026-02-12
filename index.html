@@ -155,7 +155,7 @@ body {
 /* ── Timeline Track ── */
 .timeline-h-track {
   position: relative;
-  height: 380px;
+  height: 420px;
   margin: 0 30px;
 }
 
@@ -204,8 +204,9 @@ body {
   font-size: .75rem;
 }
 .timeline-h-label .thl-action {
-  color: #555;
-  font-size: .68rem;
+  color: #333;
+  font-size: .7rem;
+  font-weight: 700;
 }
 .timeline-h-label .thl-type {
   display: inline-block;
@@ -525,32 +526,35 @@ body {
     friseHtml += '<div class="timeline-h-track">';
     friseHtml += '<div class="timeline-h-line"></div>';
 
-    const maxPoints = Math.min(usedDays.length, 16);
-    const selectedDays = usedDays.slice(0, maxPoints);
+    // Flatten all actions as individual points on the timeline
+    const allPoints = [];
+    usedDays.forEach(day => {
+      byDay[day].forEach(a => allPoints.push({ day, action: a }));
+    });
+    const maxPoints = Math.min(allPoints.length, 20);
+    const selectedPoints = allPoints.slice(0, maxPoints);
 
-    selectedDays.forEach((day, i) => {
+    selectedPoints.forEach((pt, i) => {
+      const { day, action: a } = pt;
+      const cfg = getTypeConfig(a.type);
       const pct = ((day - 1) / (daysInMonth - 1)) * 100;
-      const dayActions = byDay[day];
-      const mainAction = dayActions[0];
-      const cfg = getTypeConfig(mainAction.type);
       const above = i % 2 === 0;
-      const connH = 35 + (i % 3) * 18;
+      const connH = 35 + (i % 4) * 14;
 
-      friseHtml += `<div class="timeline-h-point" style="left:${pct}%;color:${cfg.color};background:${cfg.color}" title="${day} ${monthName} — ${mainAction.action}"></div>`;
+      friseHtml += `<div class="timeline-h-point" style="left:${pct}%;color:${cfg.color};background:${cfg.color}" title="${day} ${monthName} — ${a.action}"></div>`;
       friseHtml += `<div class="timeline-h-connector" style="left:${pct}%;background:${cfg.color};opacity:.3;${above ? 'bottom:50%;height:' + connH + 'px' : 'top:50%;height:' + connH + 'px'}"></div>`;
 
       const labelPos = above
         ? 'bottom:' + (50 + connH / 3 + 5) + '%'
         : 'top:' + (50 + connH / 3 + 5) + '%';
 
-      let extra = dayActions.length > 1 ? ` <span style="color:#999">(+${dayActions.length - 1})</span>` : '';
-      const hasDesc = mainAction.description.trim() !== '';
+      const hasDesc = a.description && a.description.trim() !== '';
 
       friseHtml += `<div class="timeline-h-label" style="left:${pct}%;${labelPos}">
         <div class="thl-date">${day} ${monthName.substring(0, 3)}.</div>
-        <div class="thl-action">${cfg.icon} ${esc(mainAction.action)}${extra}</div>
-        <span class="thl-type" style="background:${cfg.color}">${mainAction.type}</span>
-        ${hasDesc ? '<div style="color:#999;font-size:.55rem;margin-top:1px">&#9654; détail ci-dessous</div>' : ''}
+        <div class="thl-action" style="font-weight:700;color:#333">${esc(a.action)}</div>
+        <span class="thl-type" style="background:${cfg.color}">${cfg.icon} ${a.type}</span>
+        ${hasDesc ? '<div style="color:#999;font-size:.55rem;margin-top:1px">&#9654; détail</div>' : ''}
       </div>`;
     });
 
